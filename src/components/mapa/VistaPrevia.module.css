@@ -1,0 +1,27 @@
+.vista {
+  position: relative;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    linear-gradient(var(--superficie-2) 1px, transparent 1px) 0 0 / 2.5rem 2.5rem,
+    linear-gradient(90deg, var(--superficie-2) 1px, transparent 1px) 0 0 / 2.5rem 2.5rem,
+    var(--superficie);
+}
+
+.puntos {
+  position: absolute;
+  inset: var(--espacio-4);
+}
+
+.punto {
+  position: absolute;
+  display: flex;
+  translate: -50% -50%;
+  opacity: 0.85;
+}
+
+.activar {
+  position: relative;
+  box-shadow: 0 0.25rem 1rem rgb(0 0 0 / 0.25);
+}

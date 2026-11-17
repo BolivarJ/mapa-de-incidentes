@@ -1,0 +1,41 @@
+.formulario {
+  display: grid;
+  gap: var(--espacio-4);
+  width: min(100%, 32rem);
+  margin-block: var(--espacio-5);
+}
+
+.campo {
+  display: grid;
+  gap: var(--espacio-2);
+}
+
+.campo label {
+  font-weight: 700;
+}
+
+.campo input {
+  min-height: 2.75rem;
+  padding: var(--espacio-2) var(--espacio-3);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+}
+
+.campo input:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.ayuda {
+  color: var(--texto-secundario);
+  font-size: 0.9rem;
+}
+
+.error {
+  margin: 0;
+  color: var(--error);
+  font-weight: 700;
+}

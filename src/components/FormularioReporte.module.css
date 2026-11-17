@@ -1,0 +1,98 @@
+.formulario {
+  display: grid;
+  gap: var(--espacio-4);
+  max-width: 48rem;
+}
+
+.formulario label {
+  font-weight: 700;
+}
+
+.campo {
+  display: grid;
+  gap: var(--espacio-2);
+  min-width: 0;
+}
+
+.camposPrincipales {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--espacio-4);
+}
+
+.formulario input[type="file"] {
+  padding: var(--espacio-2);
+}
+
+.ubicacion {
+  display: grid;
+  gap: var(--espacio-3);
+  min-width: 0;
+  margin: 0;
+  padding: var(--espacio-4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.ubicacion legend {
+  padding-inline: var(--espacio-2);
+  font-weight: 700;
+}
+
+.ubicacion p,
+.ayuda {
+  margin: 0;
+  color: var(--texto-suave);
+  font-size: 0.9375rem;
+}
+
+.coordenadas {
+  display: grid;
+  gap: var(--espacio-3);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.errores {
+  padding: var(--espacio-3) var(--espacio-4);
+  border-inline-start: 0.25rem solid var(--peligro);
+  background: var(--superficie-2);
+}
+
+.errores p {
+  margin-block: 0 var(--espacio-2);
+  font-weight: 700;
+}
+
+.errores ul {
+  margin-block: 0;
+}
+
+.errorCampo {
+  color: var(--peligro);
+  font-size: 0.9375rem;
+  font-weight: 400;
+}
+
+.vistaPrevia {
+  width: min(100%, 30rem);
+  max-height: 24rem;
+  object-fit: contain;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.ubicacionMensaje {
+  min-height: 1.5em;
+  margin: 0;
+}
+
+@media (min-width: 48rem) {
+  .camposPrincipales {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .coordenadas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

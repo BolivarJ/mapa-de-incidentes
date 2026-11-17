@@ -1,0 +1,49 @@
+.esqueleto {
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.fila {
+  height: 6.5rem;
+  border-radius: var(--radio);
+  background: linear-gradient(
+    90deg,
+    var(--superficie-2) 25%,
+    var(--superficie) 50%,
+    var(--superficie-2) 75%
+  );
+  background-size: 200% 100%;
+  animation: brillo 1.4s ease-in-out infinite;
+}
+
+@keyframes brillo {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fila {
+    animation: none;
+  }
+}
+
+.vacio {
+  padding: var(--espacio-4);
+  border: 1px dashed var(--borde);
+  border-radius: var(--radio);
+  text-align: center;
+}
+
+.error {
+  display: grid;
+  gap: var(--espacio-2);
+  justify-items: start;
+  padding: var(--espacio-4);
+  border: 2px solid var(--peligro);
+  border-radius: var(--radio);
+}
+
+.error p {
+  margin: 0;
+}

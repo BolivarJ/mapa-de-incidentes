@@ -1,0 +1,32 @@
+.filtros fieldset {
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: var(--espacio-3) var(--espacio-4) var(--espacio-4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.filtros legend {
+  padding-inline: var(--espacio-1);
+  font-weight: 700;
+}
+
+.filtros label {
+  display: grid;
+  gap: var(--espacio-1);
+  font-weight: 600;
+}
+
+@media (min-width: 48rem) {
+  .filtros fieldset {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: end;
+  }
+}
+
+@media (min-width: 64rem) {
+  .filtros fieldset {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

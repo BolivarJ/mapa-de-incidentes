@@ -1,0 +1,23 @@
+.selector {
+  display: grid;
+  gap: var(--espacio-2);
+}
+
+.selector h2,
+.selector p {
+  margin: 0;
+}
+
+.selector h2 {
+  font-size: 1.125rem;
+}
+
+.selector p {
+  color: var(--texto-suave);
+}
+
+.mapa {
+  min-height: 18rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}

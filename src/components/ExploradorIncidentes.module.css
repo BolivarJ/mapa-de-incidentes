@@ -1,0 +1,40 @@
+.explorador {
+  display: grid;
+  gap: var(--espacio-4);
+  grid-template-areas:
+    "controles"
+    "mapa"
+    "resultados";
+}
+
+.controles {
+  grid-area: controles;
+  display: grid;
+  gap: var(--espacio-3);
+}
+
+.mapa {
+  grid-area: mapa;
+  min-width: 0;
+}
+
+.resultados {
+  grid-area: resultados;
+  min-width: 0;
+}
+
+@media (min-width: 64rem) {
+  .explorador {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    grid-template-areas:
+      "controles controles"
+      "mapa resultados";
+    align-items: start;
+  }
+
+  .resultados {
+    max-height: var(--alto-mapa);
+    overflow-y: auto;
+    padding-inline-end: var(--espacio-2);
+  }
+}
