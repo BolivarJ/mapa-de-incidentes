@@ -86,3 +86,10 @@ Nota de seguimiento: antes de que el estudiante pidiera pausar, se inició un bo
 - **Evidencia:** grupo accesible “Datos del incidente” en `src/components/FormularioReporte.tsx`; CSS mobile-first en `src/components/FormularioReporte.module.css`; prueba de layout en `e2e/responsive.spec.ts`.
 - **Validación:** Playwright midió una columna a 360 px y dos columnas a 768 px; `npm run e2e` pasó (20/20), `npm run check` pasó (72 Vitest y 11 hooks de seguridad) y `npm run build` pasó.
 - **Decisión:** solo categoría y descripción comparten las dos columnas; ubicación, foto y envío conservan ancho completo para mantener etiquetas y controles legibles.
+
+## 2026-11-16 · Publicación inicial en GitHub y corrección de escaneo
+
+- **Propósito:** publicar el estado verificado del proyecto en el remoto autorizado, en el orden de commits indicado por `PASOS.md`, y revisar el escaneo de secretos del historial.
+- **Evidencia:** cuatro commits ordenados en `main`; `.env.local` confirmado fuera del índice; hooks de Husky instalados después de inicializar Git.
+- **Validación:** `npm run check` pasó (72 pruebas Vitest y 11 de seguridad); el push pasó su hook pre-push. Gitleaks señaló un falso positivo en el fixture de clave PEM de una prueba; se reemplazó el fixture por líneas ficticias, se añadió una excepción exacta para el marcador histórico y el escaneo completo local reportó “no leaks found”. El job de secretos de la segunda ejecución CI pasó; el resto de esa ejecución estaba en curso al documentar.
+- **Decisión:** no se reescribió el historial remoto ni se saltaron hooks. El repositorio quedó publicado; CI final aún debe confirmarse. No se guardan secretos ni identificadores personales en esta entrada.
