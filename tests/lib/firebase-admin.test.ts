@@ -33,7 +33,7 @@ describe("getFirestoreAdmin", () => {
     vi.stubEnv("FIREBASE_CLIENT_EMAIL", "admin@example.test");
     vi.stubEnv(
       "FIREBASE_PRIVATE_KEY",
-      "-----BEGIN PRIVATE KEY-----\\nclave-de-prueba\\n-----END PRIVATE KEY-----\\n",
+      "linea-privada-de-prueba-uno\\nlinea-privada-de-prueba-dos\\n",
     );
     const app = { name: "mapa-incidentes-admin" };
     const firestore = {};
@@ -47,7 +47,7 @@ describe("getFirestoreAdmin", () => {
     expect(cert).toHaveBeenCalledWith({
       projectId: "mapa-incidentes-dev",
       clientEmail: "admin@example.test",
-      privateKey: "-----BEGIN PRIVATE KEY-----\nclave-de-prueba\n-----END PRIVATE KEY-----\n",
+      privateKey: "linea-privada-de-prueba-uno\nlinea-privada-de-prueba-dos\n",
     });
     expect(initializeApp).toHaveBeenCalledOnce();
   });

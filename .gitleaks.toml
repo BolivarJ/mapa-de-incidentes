@@ -30,3 +30,7 @@ paths = [
   '''^env\.example$''',
   '''^\.gitleaks\.toml$''',
 ]
+
+[[allowlists]]
+description = "Marcador no secreto del fixture de normalización de clave en la prueba de Firebase Admin"
+regexes = ['''clave-de-prueba''']
