@@ -47,6 +47,11 @@ export const POST = manejar(async (request) => {
   const resultado = nuevoIncidenteSchema.safeParse(cuerpo);
   if (!resultado.success) throw errorDeValidacion(resultado.error);
 
-  const item = await crearIncidente(repositorioIncidentesFirestore, sesion.uid, resultado.data);
+  const creacion = await crearIncidente(repositorioIncidentesFirestore, sesion.uid, resultado.data);
+  if (!creacion.ok) {
+    throw new ErrorApi(429, "Has alcanzado el límite de 5 reportes por día");
+  }
+
+  const item = creacion.incidente;
   return json({ item }, { status: 201, headers: { "Cache-Control": "no-store" } });
 });

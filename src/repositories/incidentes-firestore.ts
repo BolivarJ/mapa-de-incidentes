@@ -1,8 +1,10 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import type { Firestore } from "firebase-admin/firestore";
 import { getFirestoreAdmin } from "@/lib/firebase-admin";
 import type {
   RepositorioIncidentesFirestore,
+  ResultadoCreacionIncidente,
   ResultadoActualizacionFoto,
   ResultadoEliminacionFoto,
 } from "@/repositories/incidentes";
@@ -16,35 +18,87 @@ import {
 
 const COLECCION_INCIDENTES = "incidentes";
 const COLECCION_HISTORIAL = "historial";
+const COLECCION_LIMITES_DIARIOS = "limites-reportes-diarios";
+const LIMITE_REPORTES_DIARIOS = 5;
 const incidenteAlmacenadoSchema = incidenteSchema.omit({ id: true });
 
 function convertirIncidente(id: string, datos: unknown): Incidente {
   return { ...incidenteAlmacenadoSchema.parse(datos), id };
 }
 
-async function guardarIncidente(db: Firestore, nuevo: NuevoIncidente, uid: string) {
-  const referencia = db.collection(COLECCION_INCIDENTES).doc();
-  const creadoEn = new Date().toISOString();
-  const datos = {
-    ...nuevo,
-    uid,
-    fotoUrl: null,
-    estado: "recibido",
-    apoyos: 0,
-    creadoEn,
-  };
-  const incidente = incidenteSchema.parse({ id: referencia.id, ...datos });
-  const evento = eventoHistorialSchema.parse({
-    estado: "recibido",
-    nota: "Reporte recibido",
-    creadoEn,
+function fechaLocalReporte(fecha: Date): string {
+  const partes = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Bogota",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(fecha);
+  const parte = (tipo: "year" | "month" | "day") =>
+    partes.find((elemento) => elemento.type === tipo)?.value ?? "";
+  return `${parte("year")}-${parte("month")}-${parte("day")}`;
+}
+
+function idContadorDiario(uid: string, fecha: string): string {
+  return createHash("sha256").update(`${fecha}:${uid}`).digest("hex");
+}
+
+function cantidadActual(snapshot: { exists: boolean; get(campo: string): unknown }): number {
+  if (!snapshot.exists) return 0;
+  const cantidad = snapshot.get("cantidad");
+  if (typeof cantidad !== "number" || !Number.isSafeInteger(cantidad) || cantidad < 0) {
+    throw new Error("El contador diario de reportes no es válido");
+  }
+  return cantidad;
+}
+
+async function guardarIncidente(
+  db: Firestore,
+  nuevo: NuevoIncidente,
+  uid: string,
+): Promise<ResultadoCreacionIncidente> {
+  const ahora = new Date();
+  const fechaLocal = fechaLocalReporte(ahora);
+  const referenciaLimite = db
+    .collection(COLECCION_LIMITES_DIARIOS)
+    .doc(idContadorDiario(uid, fechaLocal));
+
+  return db.runTransaction(async (transaccion) => {
+    const snapshotLimite = await transaccion.get(referenciaLimite);
+    const cantidad = cantidadActual(snapshotLimite);
+    if (cantidad >= LIMITE_REPORTES_DIARIOS) {
+      return { ok: false, motivo: "limite-diario" };
+    }
+
+    const referencia = db.collection(COLECCION_INCIDENTES).doc();
+    const creadoEn = ahora.toISOString();
+    const datos = {
+      ...nuevo,
+      uid,
+      fotoUrl: null,
+      estado: "recibido",
+      apoyos: 0,
+      creadoEn,
+    };
+    const incidente = incidenteSchema.parse({ id: referencia.id, ...datos });
+    const evento = eventoHistorialSchema.parse({
+      estado: "recibido",
+      nota: "Reporte recibido",
+      creadoEn,
+    });
+    const referenciaEvento = referencia.collection(COLECCION_HISTORIAL).doc();
+    transaccion.create(referencia, incidenteAlmacenadoSchema.parse(datos));
+    transaccion.create(referenciaEvento, evento);
+
+    const siguienteCantidad = cantidad + 1;
+    const datosLimite = { fechaLocal, cantidad: siguienteCantidad };
+    if (snapshotLimite.exists) {
+      transaccion.update(referenciaLimite, datosLimite);
+    } else {
+      transaccion.create(referenciaLimite, datosLimite);
+    }
+
+    return { ok: true, incidente };
   });
-  const referenciaEvento = referencia.collection(COLECCION_HISTORIAL).doc();
-  const lote = db.batch();
-  lote.set(referencia, incidenteAlmacenadoSchema.parse(datos));
-  lote.set(referenciaEvento, evento);
-  await lote.commit();
-  return incidente;
 }
 
 async function leerPorUsuario(db: Firestore, uid: string): Promise<Incidente[]> {
@@ -117,7 +171,7 @@ export function crearRepositorioFirestore(db: Firestore): RepositorioIncidentesF
     async listarPorUsuario(uid) {
       return leerPorUsuario(db, uid);
     },
-    async crear(nuevo: NuevoIncidente, uid: string): Promise<Incidente> {
+    async crear(nuevo: NuevoIncidente, uid: string): Promise<ResultadoCreacionIncidente> {
       return guardarIncidente(db, nuevo, uid);
     },
     actualizarFoto(id, uid, fotoUrl) {

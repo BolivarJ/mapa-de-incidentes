@@ -9,8 +9,11 @@ export interface RepositorioIncidentes {
 }
 
 export interface RepositorioCreacionIncidente {
-  crear(nuevo: NuevoIncidente, uid: string): Promise<Incidente>;
+  crear(nuevo: NuevoIncidente, uid: string): Promise<ResultadoCreacionIncidente>;
 }
+
+export type ResultadoCreacionIncidente =
+  { ok: true; incidente: Incidente } | { ok: false; motivo: "limite-diario" };
 
 export interface RepositorioReportesUsuario {
   listarPorUsuario(uid: string): Promise<Incidente[]>;

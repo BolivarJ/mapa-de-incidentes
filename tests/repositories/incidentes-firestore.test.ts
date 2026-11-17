@@ -114,13 +114,21 @@ describe("crearRepositorioFirestore", () => {
   it("crea el incidente y el evento inicial en el mismo lote con uid del servidor", async () => {
     const refIncidente = { id: "incidente-nuevo", collection: vi.fn() };
     const refHistorial = {};
+    const refLimite = {};
     const coleccionHistorial = { doc: vi.fn(() => refHistorial) };
     refIncidente.collection.mockReturnValue(coleccionHistorial);
     const coleccion = { doc: vi.fn(() => refIncidente) };
-    const lote = { set: vi.fn(), commit: vi.fn().mockResolvedValue(undefined) };
+    const coleccionLimites = { doc: vi.fn(() => refLimite) };
+    const transaccion = {
+      get: vi.fn().mockResolvedValue({ exists: false, get: vi.fn() }),
+      create: vi.fn(),
+      update: vi.fn(),
+    };
     const firestore = {
-      collection: vi.fn(() => coleccion),
-      batch: vi.fn(() => lote),
+      collection: vi.fn((nombre: string) =>
+        nombre === "incidentes" ? coleccion : coleccionLimites,
+      ),
+      runTransaction: vi.fn(async (operacion) => operacion(transaccion)),
     } as unknown as Firestore;
     const repo = crearRepositorioFirestore(firestore);
     const nuevo = {
@@ -132,14 +140,18 @@ describe("crearRepositorioFirestore", () => {
 
     const resultado = await repo.crear(nuevo, "uid-verificado");
 
+    expect(firestore.collection).toHaveBeenCalledWith("limites-reportes-diarios");
     expect(firestore.collection).toHaveBeenCalledWith("incidentes");
     expect(coleccion.doc).toHaveBeenCalledWith();
-    expect(lote.set).toHaveBeenCalledTimes(2);
-    const [referenciaReporte, reporte] = lote.set.mock.calls[0] as [
+    expect(transaccion.create).toHaveBeenCalledTimes(3);
+    const [referenciaReporte, reporte] = transaccion.create.mock.calls[0] as [
       unknown,
       Record<string, unknown>,
     ];
-    const [referenciaEvento, evento] = lote.set.mock.calls[1] as [unknown, Record<string, unknown>];
+    const [referenciaEvento, evento] = transaccion.create.mock.calls[1] as [
+      unknown,
+      Record<string, unknown>,
+    ];
     expect(referenciaReporte).toBe(refIncidente);
     expect(referenciaEvento).toBe(refHistorial);
     expect(reporte).toMatchObject({
@@ -149,10 +161,14 @@ describe("crearRepositorioFirestore", () => {
       estado: "recibido",
       apoyos: 0,
     });
+    expect(transaccion.create).toHaveBeenCalledWith(
+      refLimite,
+      expect.objectContaining({ cantidad: 1, fechaLocal: expect.any(String) }),
+    );
     expect(evento).toMatchObject({ estado: "recibido", nota: "Reporte recibido" });
     expect(evento.creadoEn).toBe(reporte.creadoEn);
-    expect(lote.commit).toHaveBeenCalledOnce();
-    expect(resultado).toMatchObject({ id: "incidente-nuevo", ...reporte });
+    expect(firestore.runTransaction).toHaveBeenCalledOnce();
+    expect(resultado).toEqual({ ok: true, incidente: { id: "incidente-nuevo", ...reporte } });
   });
 
   it("actualiza la foto dentro de una transacción solo para el dueño del reporte", async () => {

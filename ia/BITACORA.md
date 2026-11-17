@@ -136,3 +136,10 @@ Nota de seguimiento: antes de que el estudiante pidiera pausar, se inició un bo
 - **Cambio:** se permitió conectar a `https://vercel.com` y al host público de Blob en `connect-src` de `next.config.ts`.
 - **Validación:** el commit `d1a486d` quedó desplegado en Production y GitHub CI pasó en sus 3 jobs. En el momento del ajuste CSP, `npm run check` pasó (96 Vitest y 11 hooks), `npm run build` pasó; la validación Playwright 20/20 fue ejecutada en el commit previo de la función de fotos.
 - **Decisión:** la prueba real confirmó subida y lectura pública del Blob. No se guardaron contraseñas ni se leyeron valores de variables. El reporte de prueba queda en Firestore para identificar la evidencia; su foto puede quitarse desde “Mis reportes” si el usuario lo solicita.
+
+## 2026-11-17 · Límite diario de creación de reportes
+
+- **Propósito:** cumplir el límite de cinco reportes por usuario y día.
+- **Evidencia:** el repositorio calcula el día calendario de Medellín y usa un ID de contador derivado de un hash del UID y la fecha. Una transacción lee el contador; si es menor que cinco, escribe contador, incidente e historial inicial en una sola operación. Al llegar a cinco retorna el resultado tipado de límite y la API responde HTTP 429 con `{ error }` y `X-Request-Id`.
+- **Pruebas primero:** se añadieron pruebas de quinto/siguiente reporte, rechazo del sexto sin escrituras, reinicio al cruzar medianoche de Medellín y mapeo API 429 antes de implementar el cambio.
+- **Validación:** `npm run check` pasó con 100 pruebas Vitest y 11 pruebas de hooks. Se verifican el quinto reporte, el rechazo del sexto sin escrituras, el reinicio al cruzar la medianoche de Medellín y la respuesta API 429 con `X-Request-Id`. `npm run build` pasó, Playwright pasó (20/20) y `npm audit --audit-level=high` pasó; persisten avisos moderados de dependencias transitivas.

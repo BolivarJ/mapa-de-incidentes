@@ -36,7 +36,10 @@ describe("POST /api/incidentes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     obtenerSesionActual.mockResolvedValue({ uid: "uid-verificado", email: "vecino@example.test" });
-    crear.mockResolvedValue({ id: "incidente-nuevo", ...datos, uid: "uid-verificado" });
+    crear.mockResolvedValue({
+      ok: true,
+      incidente: { id: "incidente-nuevo", ...datos, uid: "uid-verificado" },
+    });
   });
 
   it("exige una sesión verificada antes de crear", async () => {
@@ -72,5 +75,18 @@ describe("POST /api/incidentes", () => {
       item: { id: "incidente-nuevo", ...datos, uid: "uid-verificado" },
     });
     expect(respuesta.headers.get("cache-control")).toBe("no-store");
+  });
+
+  it("devuelve 429 cuando se alcanzó el límite diario y no crea otro reporte", async () => {
+    crear.mockResolvedValue({ ok: false, motivo: "limite-diario" });
+
+    const respuesta = await POST(solicitud(datos));
+
+    expect(respuesta.status).toBe(429);
+    expect(await respuesta.json()).toEqual({
+      error: "Has alcanzado el límite de 5 reportes por día",
+    });
+    expect(respuesta.headers.get("x-request-id")).toBeTruthy();
+    expect(crear).toHaveBeenCalledWith(datos, "uid-verificado");
   });
 });
