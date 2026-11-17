@@ -114,3 +114,10 @@ Nota de seguimiento: antes de que el estudiante pidiera pausar, se inició un bo
 - **Evidencia:** `/`, `/reportar` y `/api/incidentes` fallaban al cargar `firebase-admin/auth`: `jwks-rsa@4.1.0` usaba `require()` para cargar `jose@6`, ESM no compatible con el cargador CommonJS observado en Vercel.
 - **Validación:** se cambió Firebase Admin a 13.10.0, que resuelve `jwks-rsa@3.2.2` y `jose@4.15.9`; Node cargó Auth y Firestore, `npm run check` (78 Vitest + 11 hooks), `npm run build` y Playwright (20/20) pasaron. Vercel redeplegó la rama `main`; se comprobó que `/` lista reportes de Firestore, `/reportar` carga y `/iniciar-sesion` renderiza sin 500. `GET /api/incidentes` devolvió los incidentes almacenados.
 - **Decisión:** mantener Admin SDK 13.10.0 por compatibilidad con el runtime de producción. Las variables del proyecto se configuraron directamente en Vercel; no se copiaron ni registraron sus valores en esta bitácora. `npm audit` reporta avisos moderados en dependencias transitivas; el umbral CI `high` no los bloquea. No se probó inicio de sesión en Vercel.
+
+## 2026-11-16 · Sincronización de lockfile y Node de CI
+
+- **Propósito:** corregir el fallo del job de calidad en `npm ci` de GitHub Actions.
+- **Evidencia:** el log autenticado informó que faltaban `@emnapi/runtime@1.11.3` y `@emnapi/core@2.0.0-beta.2` en `package-lock.json`; también mostró que Node 22 no cumplía el mínimo declarado por Firebase Storage.
+- **Validación:** se regeneró el lockfile con npm 10.9.9, la misma versión de npm del runner, y `npm ci --dry-run --ignore-scripts` terminó con código 0. `npm ci`, `npm run check` (78 pruebas y 11 hooks), `npm run build`, `npm run e2e` (20/20) y `npm audit --audit-level=high` pasaron localmente.
+- **Decisión:** los jobs de calidad y E2E usan Node 24, compatible con los mínimos actuales de Firebase Storage y jsdom. La ejecución remota de CI queda pendiente de confirmar después del push.
