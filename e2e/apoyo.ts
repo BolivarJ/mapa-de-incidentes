@@ -38,6 +38,29 @@ export async function conIncidentesDeEjemplo(page: Page) {
   });
 }
 
+/** Contenido mínimo para probar la navegación al detalle sin depender de Firestore. */
+export async function conDetalleDeEjemplo(page: Page) {
+  await page.route("**/incidentes/i-*", (route) =>
+    route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: `<!doctype html>
+        <html lang="es">
+          <head><meta charset="utf-8"><title>Incidente de ejemplo</title></head>
+          <body><main id="contenido"><article>
+            <p><a href="/">Volver al mapa</a></p>
+            <h1>Hueco en la vía</h1>
+            <p>Recibido · Reportado el <time datetime="2026-11-10T14:20:00Z">10 nov 2026</time></p>
+            <p>Incidente de ejemplo para pruebas de navegación.</p>
+            <section aria-labelledby="titulo-seguimiento">
+              <h2 id="titulo-seguimiento">Seguimiento</h2>
+              <ol><li><strong>Recibido</strong><p>Reporte recibido</p></li></ol>
+            </section>
+          </article></main></body>
+        </html>`,
+    }),
+  );
+}
+
 export async function hayScrollHorizontal(page: Page) {
   return page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 }

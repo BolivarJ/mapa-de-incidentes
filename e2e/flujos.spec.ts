@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
-import { conIncidentesDeEjemplo, sinTeselas } from "./apoyo";
+import { conDetalleDeEjemplo, conIncidentesDeEjemplo, sinTeselas } from "./apoyo";
 
 test.use({ viewport: { width: 1024, height: 800 } });
 
 test("criterio 4: la lista equivalente al mapa se recorre con teclado", async ({ page }) => {
   await sinTeselas(page);
   await conIncidentesDeEjemplo(page);
+  await conDetalleDeEjemplo(page);
   await page.goto("/");
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Saltar al contenido" })).toBeFocused();
@@ -38,6 +39,7 @@ test("criterio 2: un incidente resuelto se distingue por forma y texto, no solo 
 
 test("filtros: el estado vacío explica qué hacer", async ({ page }) => {
   await sinTeselas(page);
+  await conIncidentesDeEjemplo(page);
   await page.goto("/");
   await page.getByLabel("Categoría").selectOption("basuras");
   await page.getByLabel("Estado").selectOption("recibido");
@@ -49,11 +51,11 @@ test("error del servidor: se anuncia y se puede reintentar", async ({ page }) =>
   let fallar = true;
   await page.route("**/api/incidentes?**", async (r) => {
     if (fallar) return r.fulfill({ status: 500, json: { error: "x" } });
-    return r.continue();
+    return r.fulfill({ json: { items: [], siguienteCursor: null } });
   });
   await page.goto("/");
   await expect(page.getByRole("alert").filter({ hasText: "No se pudieron cargar" })).toBeVisible();
   fallar = false;
   await page.getByRole("button", { name: "Reintentar" }).click();
-  await expect(page.getByRole("heading", { name: /Incidentes en el área visible/ })).toBeVisible();
+  await expect(page.getByText(/No hay incidentes en esta zona/)).toBeVisible();
 });

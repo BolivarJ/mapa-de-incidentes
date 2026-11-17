@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { sinTeselas } from "./apoyo";
+import { conIncidentesDeEjemplo, sinTeselas } from "./apoyo";
 
 // Requisito: JS transferido ≤ 200 kB. Reto: ≤ 120 kB (se mide en producción, Vercel usa brotli).
 // En local `next start` comprime con gzip (~15 % más que brotli): por eso el reto se exige con BASE_URL.
@@ -18,6 +18,7 @@ async function jsTransferidoKb(page: Page) {
     }
   });
   await sinTeselas(page);
+  await conIncidentesDeEjemplo(page);
   await page.goto("/", { waitUntil: "networkidle" });
   return (await Promise.all(tamanos)).reduce((a, b) => a + b, 0) / 1024;
 }
@@ -40,6 +41,7 @@ test("Leaflet no se descarga hasta pedir el mapa", async ({ page }) => {
     }
   });
   await sinTeselas(page);
+  await conIncidentesDeEjemplo(page);
   await page.goto("/", { waitUntil: "networkidle" });
   expect(leaflet).toHaveLength(0);
   await page.getByRole("button", { name: "Mostrar mapa interactivo" }).click();

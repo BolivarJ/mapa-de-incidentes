@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
-import { ANCHOS, PAGINAS, hayScrollHorizontal, sinTeselas, violacionesAxe } from "./apoyo";
+import {
+  ANCHOS,
+  PAGINAS,
+  conDetalleDeEjemplo,
+  conIncidentesDeEjemplo,
+  hayScrollHorizontal,
+  sinTeselas,
+  violacionesAxe,
+} from "./apoyo";
 
 // Reto: prueba en 3 anchos sin scroll horizontal y 0 violaciones de axe.
 for (const ancho of ANCHOS) {
@@ -9,6 +17,8 @@ for (const ancho of ANCHOS) {
     for (const ruta of PAGINAS) {
       test(`${ruta}: sin scroll horizontal y sin violaciones de axe`, async ({ page }) => {
         await sinTeselas(page);
+        if (ruta === "/") await conIncidentesDeEjemplo(page);
+        if (ruta.startsWith("/incidentes/")) await conDetalleDeEjemplo(page);
         await page.goto(ruta);
         await expect(page.locator("h1")).toHaveCount(1);
         if (ruta === "/") {
