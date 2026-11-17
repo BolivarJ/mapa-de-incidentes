@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FormaEstado } from "@/components/FormaEstado";
+import Image from "next/image";
 import { formatearFecha, formatearFechaHora } from "@/lib/formato";
 import { repositorioIncidentesFirestore } from "@/repositories/incidentes-firestore";
 import { ETIQUETA_CATEGORIA, ETIQUETA_ESTADO } from "@/schemas/incidente";
@@ -38,6 +39,16 @@ export default async function DetalleIncidente({ params }: Props) {
         <span>{incidente.apoyos} vecinos dicen «a mí también me pasa»</span>
       </p>
       <p>{incidente.descripcion}</p>
+      {incidente.fotoUrl && (
+        <Image
+          className={styles.foto}
+          src={incidente.fotoUrl}
+          alt={`Foto del incidente: ${ETIQUETA_CATEGORIA[incidente.categoria]}`}
+          width={960}
+          height={640}
+          unoptimized
+        />
+      )}
       <section aria-labelledby="titulo-seguimiento">
         <h2 id="titulo-seguimiento">Seguimiento</h2>
         <ol className={styles.linea}>

@@ -4,12 +4,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { FormularioReporte } from "@/components/FormularioReporte";
 import { violaciones } from "./axe";
 
-const { procesarFoto } = vi.hoisted(() => ({ procesarFoto: vi.fn() }));
+const { procesarFoto, upload } = vi.hoisted(() => ({ procesarFoto: vi.fn(), upload: vi.fn() }));
 
 vi.mock("@/lib/procesar-foto", () => ({
   TAMANO_MAXIMO_FOTO: 5 * 1024 * 1024,
   procesarFoto,
 }));
+
+vi.mock("@vercel/blob/client", () => ({ upload }));
 
 vi.mock("@/components/mapa/SelectorUbicacion", () => ({
   SelectorUbicacion: ({ seleccionar }: { seleccionar: (lat: number, lng: number) => void }) => (
@@ -32,6 +34,7 @@ function completarCampos() {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.clearAllMocks();
 });
 
 describe("FormularioReporte", () => {
@@ -193,22 +196,46 @@ describe("FormularioReporte", () => {
     ).toHaveAttribute("src", "blob:foto-local");
   });
 
-  it("avisa que la foto procesada todavía no se adjunta al reporte", async () => {
+  it("sube la foto después de crear el reporte y asocia su ruta", async () => {
     const user = userEvent.setup();
     const foto = new File(["imagen"], "barrio.png", { type: "image/png" });
+    const pathname = "incidentes/incidente-1/foto.png";
+    const fotoUrl = `https://almacen.public.blob.vercel-storage.com/${pathname}`;
     procesarFoto.mockImplementation(async (archivo: File) => archivo);
-    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn(() => "blob:foto-local") }));
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 201 })));
+    upload.mockResolvedValue({ pathname, url: fotoUrl });
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValueOnce(Response.json({ item: { id: "incidente-1" } }, { status: 201 }))
+        .mockResolvedValueOnce(Response.json({ fotoUrl }, { status: 200 })),
+    );
     render(<FormularioReporte />);
     completarCampos();
     await user.upload(screen.getByLabelText("Foto (opcional)"), foto);
     await user.click(screen.getByRole("button", { name: "Enviar reporte" }));
 
-    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+    expect(upload).toHaveBeenCalledWith(
+      expect.stringMatching(/^incidentes\/incidente-1\/[^/]+\.png$/),
+      foto,
+      expect.objectContaining({
+        access: "public",
+        handleUploadUrl: "/api/incidentes/blob",
+        clientPayload: "incidente-1",
+      }),
+    );
     expect(JSON.parse(vi.mocked(fetch).mock.calls[0]?.[1]?.body as string)).not.toHaveProperty(
       "foto",
     );
-    expect(await screen.findByRole("status")).toHaveTextContent("La foto todavía no se guarda");
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      "/api/incidentes/incidente-1/foto",
+      expect.objectContaining({ method: "PATCH", body: JSON.stringify({ pathname }) }),
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent(
+      "Reporte enviado correctamente con foto",
+    );
   });
 
   it("no tiene violaciones de accesibilidad automatizadas", async () => {

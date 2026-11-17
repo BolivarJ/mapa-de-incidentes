@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { FormaEstado } from "@/components/FormaEstado";
+import { FotoReportePropio } from "@/components/FotoReportePropio";
 import { formatearFecha } from "@/lib/formato";
 import { obtenerSesionActual } from "@/lib/sesion";
 import { repositorioIncidentesFirestore } from "@/repositories/incidentes-firestore";
@@ -25,6 +26,7 @@ function TarjetaReporte({ reporte }: { reporte: Incidente }) {
           </span>
         </p>
         <p>{reporte.descripcion}</p>
+        <FotoReportePropio id={reporte.id} fotoUrl={reporte.fotoUrl} />
       </article>
     </li>
   );

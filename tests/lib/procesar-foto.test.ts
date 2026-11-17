@@ -19,7 +19,9 @@ describe("procesarFoto", () => {
   it("rechaza archivos que no son imágenes", async () => {
     const archivo = new File(["texto"], "nota.txt", { type: "text/plain" });
 
-    await expect(procesarFoto(archivo, false)).rejects.toThrow("Seleccione un archivo de imagen");
+    await expect(procesarFoto(archivo, false)).rejects.toThrow(
+      "Seleccione una foto JPEG, PNG o WebP",
+    );
   });
 
   it("reencodea por canvas cuando se solicita eliminar metadatos", async () => {

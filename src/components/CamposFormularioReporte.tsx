@@ -115,7 +115,7 @@ export function CampoFoto({
         id="foto"
         name="foto"
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         disabled={procesando}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? "error-foto" : "ayuda-foto"}
@@ -127,9 +127,9 @@ export function CampoFoto({
         procesando={procesando}
       />
       <span id="ayuda-foto" className={styles.ayuda}>
-        Se procesa en este dispositivo y se limita a 5 MB. Marque la casilla para quitar metadatos;
-        las imágenes que se comprimen también se reescriben y pierden sus metadatos. La foto aún no
-        se sube ni se guarda.
+        Admite JPEG, PNG y WebP. Se procesa en este dispositivo y se limita a 5 MB. Marque la
+        casilla para quitar metadatos; las imágenes que se comprimen también se reescriben y pierden
+        sus metadatos. La foto aún no se sube ni se guarda hasta enviar el reporte.
       </span>
       {procesando && <span role="status">Procesando foto en este dispositivo…</span>}
       {error && (

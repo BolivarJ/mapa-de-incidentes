@@ -154,4 +154,56 @@ describe("crearRepositorioFirestore", () => {
     expect(lote.commit).toHaveBeenCalledOnce();
     expect(resultado).toMatchObject({ id: "incidente-nuevo", ...reporte });
   });
+
+  it("actualiza la foto dentro de una transacción solo para el dueño del reporte", async () => {
+    const referencia = {};
+    const documento = {
+      exists: true,
+      id: "incidente-1",
+      data: () => ({ ...incidente, fotoUrl: null }),
+    };
+    const transaccion = { get: vi.fn().mockResolvedValue(documento), update: vi.fn() };
+    const firestore = {
+      collection: vi.fn(() => ({ doc: vi.fn(() => referencia) })),
+      runTransaction: vi.fn(async (operacion) => operacion(transaccion)),
+    } as unknown as Firestore;
+    const repo = crearRepositorioFirestore(firestore);
+
+    await expect(
+      repo.actualizarFoto("incidente-1", "vecino-1", "https://foto.test/a.webp"),
+    ).resolves.toEqual({ ok: true, urlAnterior: null });
+    await expect(
+      repo.actualizarFoto("incidente-1", "otro-vecino", "https://foto.test/a.webp"),
+    ).resolves.toEqual({ ok: false, motivo: "no-autorizado" });
+    expect(transaccion.update).toHaveBeenCalledOnce();
+    expect(transaccion.update).toHaveBeenCalledWith(referencia, {
+      fotoUrl: "https://foto.test/a.webp",
+    });
+  });
+
+  it("desasocia una foto en Firestore solo para el dueño antes de eliminar el Blob", async () => {
+    const referencia = {};
+    const documento = {
+      exists: true,
+      id: "incidente-1",
+      data: () => ({ ...incidente, fotoUrl: "https://foto.test/a.webp" }),
+    };
+    const transaccion = { get: vi.fn().mockResolvedValue(documento), update: vi.fn() };
+    const firestore = {
+      collection: vi.fn(() => ({ doc: vi.fn(() => referencia) })),
+      runTransaction: vi.fn(async (operacion) => operacion(transaccion)),
+    } as unknown as Firestore;
+    const repo = crearRepositorioFirestore(firestore);
+
+    await expect(repo.eliminarFoto("incidente-1", "vecino-1")).resolves.toEqual({
+      ok: true,
+      fotoUrl: "https://foto.test/a.webp",
+    });
+    await expect(repo.eliminarFoto("incidente-1", "otro-vecino")).resolves.toEqual({
+      ok: false,
+      motivo: "no-autorizado",
+    });
+    expect(transaccion.update).toHaveBeenCalledOnce();
+    expect(transaccion.update).toHaveBeenCalledWith(referencia, { fotoUrl: null });
+  });
 });

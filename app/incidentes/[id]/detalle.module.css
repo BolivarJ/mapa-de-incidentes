@@ -9,6 +9,13 @@
   color: var(--texto-suave);
 }
 
+.foto {
+  display: block;
+  width: min(100%, 60rem);
+  height: auto;
+  border-radius: var(--radio);
+}
+
 .linea {
   margin: 0;
   padding: 0 0 0 var(--espacio-4);

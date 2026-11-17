@@ -1,4 +1,6 @@
-export const TAMANO_MAXIMO_FOTO = 5 * 1024 * 1024;
+import { esTipoFoto, TAMANO_MAXIMO_FOTO } from "@/lib/foto";
+
+export { TAMANO_MAXIMO_FOTO } from "@/lib/foto";
 const LADO_MAXIMO = 1920;
 const INTENTOS_MAXIMOS = 8;
 
@@ -51,7 +53,7 @@ export async function procesarFoto(
   archivo: File,
   quitarMetadatosUbicacion: boolean,
 ): Promise<File> {
-  if (!archivo.type.startsWith("image/")) throw new Error("Seleccione un archivo de imagen.");
+  if (!esTipoFoto(archivo.type)) throw new Error("Seleccione una foto JPEG, PNG o WebP.");
   if (archivo.size <= TAMANO_MAXIMO_FOTO && !quitarMetadatosUbicacion) return archivo;
   if (typeof createImageBitmap !== "function") {
     throw new Error("Este navegador no permite optimizar la imagen. Pruebe con otra imagen.");

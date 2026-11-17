@@ -1,7 +1,11 @@
 import "server-only";
 import type { Firestore } from "firebase-admin/firestore";
 import { getFirestoreAdmin } from "@/lib/firebase-admin";
-import type { RepositorioIncidentesFirestore } from "@/repositories/incidentes";
+import type {
+  RepositorioIncidentesFirestore,
+  ResultadoActualizacionFoto,
+  ResultadoEliminacionFoto,
+} from "@/repositories/incidentes";
 import {
   eventoHistorialSchema,
   incidenteSchema,
@@ -50,6 +54,39 @@ async function leerPorUsuario(db: Firestore, uid: string): Promise<Incidente[]> 
     .sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
 }
 
+async function actualizarFoto(
+  db: Firestore,
+  id: string,
+  uid: string,
+  fotoUrl: string,
+): Promise<ResultadoActualizacionFoto> {
+  const referencia = db.collection(COLECCION_INCIDENTES).doc(id);
+  return db.runTransaction(async (transaccion) => {
+    const documento = await transaccion.get(referencia);
+    if (!documento.exists) return { ok: false, motivo: "no-encontrado" };
+    const incidente = convertirIncidente(documento.id, documento.data());
+    if (incidente.uid !== uid) return { ok: false, motivo: "no-autorizado" };
+    transaccion.update(referencia, { fotoUrl });
+    return { ok: true, urlAnterior: incidente.fotoUrl };
+  });
+}
+
+async function eliminarFoto(
+  db: Firestore,
+  id: string,
+  uid: string,
+): Promise<ResultadoEliminacionFoto> {
+  const referencia = db.collection(COLECCION_INCIDENTES).doc(id);
+  return db.runTransaction(async (transaccion) => {
+    const documento = await transaccion.get(referencia);
+    if (!documento.exists) return { ok: false, motivo: "no-encontrado" };
+    const incidente = convertirIncidente(documento.id, documento.data());
+    if (incidente.uid !== uid) return { ok: false, motivo: "no-autorizado" };
+    transaccion.update(referencia, { fotoUrl: null });
+    return { ok: true, fotoUrl: incidente.fotoUrl };
+  });
+}
+
 export function crearRepositorioFirestore(db: Firestore): RepositorioIncidentesFirestore {
   return {
     async listarPorLatitud(sur, norte, limite) {
@@ -83,6 +120,12 @@ export function crearRepositorioFirestore(db: Firestore): RepositorioIncidentesF
     async crear(nuevo: NuevoIncidente, uid: string): Promise<Incidente> {
       return guardarIncidente(db, nuevo, uid);
     },
+    actualizarFoto(id, uid, fotoUrl) {
+      return actualizarFoto(db, id, uid, fotoUrl);
+    },
+    eliminarFoto(id, uid) {
+      return eliminarFoto(db, id, uid);
+    },
   };
 }
 
@@ -107,5 +150,11 @@ export const repositorioIncidentesFirestore: RepositorioIncidentesFirestore = {
   },
   crear(nuevo, uid) {
     return crearRepositorioFirestore(firestoreConfigurado()).crear(nuevo, uid);
+  },
+  actualizarFoto(id, uid, fotoUrl) {
+    return crearRepositorioFirestore(firestoreConfigurado()).actualizarFoto(id, uid, fotoUrl);
+  },
+  eliminarFoto(id, uid) {
+    return crearRepositorioFirestore(firestoreConfigurado()).eliminarFoto(id, uid);
   },
 };

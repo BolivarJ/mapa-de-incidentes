@@ -16,5 +16,21 @@ export interface RepositorioReportesUsuario {
   listarPorUsuario(uid: string): Promise<Incidente[]>;
 }
 
+export type ResultadoActualizacionFoto =
+  | { ok: true; urlAnterior: string | null }
+  | { ok: false; motivo: "no-encontrado" | "no-autorizado" };
+
+export type ResultadoEliminacionFoto =
+  { ok: true; fotoUrl: string | null } | { ok: false; motivo: "no-encontrado" | "no-autorizado" };
+
+export interface RepositorioFotosIncidente {
+  actualizarFoto(id: string, uid: string, fotoUrl: string): Promise<ResultadoActualizacionFoto>;
+  eliminarFoto(id: string, uid: string): Promise<ResultadoEliminacionFoto>;
+}
+
 export interface RepositorioIncidentesFirestore
-  extends RepositorioIncidentes, RepositorioCreacionIncidente, RepositorioReportesUsuario {}
+  extends
+    RepositorioIncidentes,
+    RepositorioCreacionIncidente,
+    RepositorioReportesUsuario,
+    RepositorioFotosIncidente {}

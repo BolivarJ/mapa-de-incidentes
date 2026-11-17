@@ -1,8 +1,10 @@
 "use client";
 import { useCallback, useState } from "react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
-import { nuevoIncidenteSchema } from "@/schemas/incidente";
 import { useFotoReporte } from "@/hooks/useFotoReporte";
+import { subirFotoReporte } from "@/lib/subir-foto-reporte";
+import { nuevoIncidenteSchema } from "@/schemas/incidente";
+import { z } from "zod";
 
 export type CamposReporte = {
   categoria: string;
@@ -78,9 +80,39 @@ function marcarUbicacion(
   setMensaje("Ubicación marcada en el mapa. Puede ajustar las coordenadas manualmente.");
 }
 
+async function adjuntarFotoGuardada(
+  respuesta: Response,
+  foto: File,
+  limpiarFormulario: () => void,
+  setMensaje: CambiarMensaje,
+): Promise<boolean> {
+  const resultado = z
+    .object({ item: z.object({ id: z.string().min(1) }) })
+    .safeParse(await respuesta.json().catch(() => null));
+  if (!resultado.success) {
+    limpiarFormulario();
+    setMensaje("El reporte se guardó, pero no se pudo adjuntar la foto.");
+    return false;
+  }
+  try {
+    await subirFotoReporte(resultado.data.item.id, foto);
+    return true;
+  } catch {
+    limpiarFormulario();
+    setMensaje("El reporte se guardó, pero no se pudo adjuntar la foto.");
+    return false;
+  }
+}
+
+function mensajeDeFallo(foto: File | null): string {
+  return foto
+    ? "El reporte se guardó, pero no se pudo adjuntar la foto. Puedes agregarla desde Mis reportes."
+    : "No se pudo conectar con el servidor. Inténtalo de nuevo.";
+}
+
 async function guardarReporte(
   datos: { categoria: string; descripcion: string; lat: number; lng: number },
-  teniaFoto: boolean,
+  foto: File | null,
   limpiarFormulario: () => void,
   setMensaje: CambiarMensaje,
   setRequiereSesion: CambiarEstado,
@@ -105,15 +137,13 @@ async function guardarReporte(
       return;
     }
 
-    limpiarFormulario();
     setRequiereSesion(false);
-    setMensaje(
-      teniaFoto
-        ? "Reporte enviado correctamente. La foto todavía no se guarda."
-        : "Reporte enviado correctamente.",
-    );
+    if (foto && !(await adjuntarFotoGuardada(respuesta, foto, limpiarFormulario, setMensaje)))
+      return;
+    limpiarFormulario();
+    setMensaje(foto ? "Reporte enviado correctamente con foto." : "Reporte enviado correctamente.");
   } catch {
-    setMensaje("No se pudo conectar con el servidor. Inténtalo de nuevo.");
+    setMensaje(mensajeDeFallo(foto));
   } finally {
     setEnviando(false);
   }
@@ -123,7 +153,7 @@ async function validarReporte(
   evento: FormEvent<HTMLFormElement>,
   campos: CamposReporte,
   errores: ErroresReporte,
-  teniaFoto: boolean,
+  foto: File | null,
   setErrores: CambiarErrores,
   setCampos: CambiarCampos,
   setMensaje: CambiarMensaje,
@@ -156,7 +186,7 @@ async function validarReporte(
   setErrores({});
   await guardarReporte(
     resultado.data,
-    teniaFoto,
+    foto,
     () => {
       formulario.reset();
       setCampos(CAMPOS_INICIALES);
@@ -204,7 +234,7 @@ export function useFormularioReporte() {
         evento,
         campos,
         errores,
-        Boolean(foto.url),
+        foto.archivo,
         setErrores,
         setCampos,
         setMensaje,

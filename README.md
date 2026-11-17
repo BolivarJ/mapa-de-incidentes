@@ -19,19 +19,21 @@ Requiere Node ≥ 22. En Windows, trabaje en WSL2 (Ubuntu) para que funcione el 
 
 ## Estado por hito
 
-| Hito                                                                         | Estado                                                                                                  |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| 1 · Mapa + lista accesible, fetch con carga/vacío/error, configuración de IA | ✅ Interfaz y estados; los datos de ejemplo quedan como fixtures de pruebas                             |
-| 2 · Formularios, rutas, reportar con foto y ubicación                        | Parcial: formulario, mapa alternativo, diseño responsive y fotos optimizadas localmente; Blob pendiente |
-| 3 · API por capas con Firestore, `openapi.yaml`, Bruno                       | Parcial: lecturas y creación con Firestore; OpenAPI y Bruno pendientes                                  |
-| 4 · Auth con cookie de sesión, roles, despliegue, evidencias                 | Parcial: auth y “Mis reportes”; roles de Gestión y despliegue pendientes                                |
+| Hito                                                                         | Estado                                                                                             |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| 1 · Mapa + lista accesible, fetch con carga/vacío/error, configuración de IA | ✅ Interfaz y estados; los datos de ejemplo quedan como fixtures de pruebas                        |
+| 2 · Formularios, rutas, reportar con foto y ubicación                        | Parcial: código Blob implementado; almacén conectado a Production/Preview, falta publicar y probar |
+| 3 · API por capas con Firestore, `openapi.yaml`, Bruno                       | Parcial: lecturas y creación con Firestore; OpenAPI y Bruno pendientes                             |
+| 4 · Auth con cookie de sesión, roles, despliegue, evidencias                 | Parcial: auth y “Mis reportes”; roles de Gestión y despliegue pendientes                           |
 
 ## API disponible
 
 `GET /api/incidentes?norte=&sur=&este=&oeste=&categoria=&estado=&desde=&limite=` → `{ items, siguienteCursor }`.
 Consulta el rango de latitud en el repositorio y filtra la longitud en el servidor (Firestore solo admite rango en un campo). Errores `{ error, detalles? }`.
 
-`POST /api/incidentes` requiere una sesión verificada y acepta `{ categoria, descripcion, lat, lng }`. El servidor asigna el `uid`, estado inicial y fecha, y escribe el incidente junto con el primer evento de historial en un lote atómico. La foto se optimiza localmente a un máximo de 5 MB y existe una opción para quitar metadatos reencodeándola, pero aún no se adjunta ni se sube a Blob.
+`POST /api/incidentes` requiere una sesión verificada y acepta `{ categoria, descripcion, lat, lng }`. El servidor asigna el `uid`, estado inicial y fecha, y escribe el incidente junto con el primer evento de historial en un lote atómico. La foto se optimiza localmente a un máximo de 5 MB y existe una opción para quitar metadatos reencodeándola. Después de crear el reporte, el navegador sube JPEG/PNG/WebP a Blob con un token limitado al reporte del usuario autenticado; el servidor comprueba tipo/tamaño y guarda la URL en Firestore. “Mis reportes” permite añadir, reemplazar o quitar la foto. Si la subida inicial falla, el reporte se conserva sin foto y puede agregarse desde esa página.
+
+Para habilitar subidas, conecta un almacén Vercel Blob al proyecto y a los entornos necesarios, incluyendo Development si se ejecuta localmente. La ruta usa `BLOB_READ_WRITE_TOKEN`; la variable de desarrollo de ejemplo es ficticia y no sirve para subir. No copies credenciales a archivos versionados.
 
 La lectura usa la colección `incidentes`; el ID del documento es el ID del incidente y sus campos se validan con el esquema compartido. El historial se lee desde la subcolección `historial`, ordenado por `creadoEn`. El endpoint público omite `uid`; “Mis reportes” filtra en el servidor por el UID de la sesión verificada.
 
@@ -44,7 +46,7 @@ La autenticación intercambia un ID token reciente de Firebase por la cookie Htt
 | `leaflet`                                                    | Mapa ligero (~40 kB gzip), cargado con `next/dynamic` y `ssr: false`                                                     |
 | `zod`                                                        | Un solo esquema de validación para cliente y servidor                                                                    |
 | `firebase`, `firebase-admin`                                 | Auth en el navegador; Firestore y cookies de sesión en el servidor. Admin 13.10 evita incompatibilidad CJS/ESM de Vercel |
-| `@vercel/blob`                                               | Fotos de los incidentes                                                                                                  |
+| `@vercel/blob`                                               | Fotos públicas de incidentes; token de carga limitado por sesión, reporte, tipo y tamaño                                 |
 | `vitest`, `@testing-library/*`, `jsdom`, `axe-core`          | Pruebas unitarias, de componentes y de accesibilidad                                                                     |
 | `eslint-config-prettier`, `prettier`, `husky`, `lint-staged` | Calidad automática en commit y push                                                                                      |
 

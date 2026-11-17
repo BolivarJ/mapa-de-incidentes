@@ -1,0 +1,15 @@
+.foto {
+  display: grid;
+  justify-items: start;
+  gap: var(--espacio-2);
+}
+
+.foto img {
+  width: min(100%, 45rem);
+  height: auto;
+  border-radius: var(--radio);
+}
+
+.foto p {
+  margin: 0;
+}
