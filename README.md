@@ -19,12 +19,12 @@ Requiere Node ≥ 22. En Windows, trabaje en WSL2 (Ubuntu) para que funcione el 
 
 ## Estado por hito
 
-| Hito                                                                         | Estado                                                                                             |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| 1 · Mapa + lista accesible, fetch con carga/vacío/error, configuración de IA | ✅ Interfaz y estados; los datos de ejemplo quedan como fixtures de pruebas                        |
-| 2 · Formularios, rutas, reportar con foto y ubicación                        | Parcial: código Blob implementado; almacén conectado a Production/Preview, falta publicar y probar |
-| 3 · API por capas con Firestore, `openapi.yaml`, Bruno                       | Parcial: lecturas y creación con Firestore; OpenAPI y Bruno pendientes                             |
-| 4 · Auth con cookie de sesión, roles, despliegue, evidencias                 | Parcial: auth y “Mis reportes”; roles de Gestión y despliegue pendientes                           |
+| Hito                                                                         | Estado                                                                       |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| 1 · Mapa + lista accesible, fetch con carga/vacío/error, configuración de IA | ✅ Interfaz y estados; los datos de ejemplo quedan como fixtures de pruebas  |
+| 2 · Formularios, rutas, reportar con foto y ubicación                        | Fotos subidas y verificadas en Production; revisar otros requisitos del hito |
+| 3 · API por capas con Firestore, `openapi.yaml`, Bruno                       | Parcial: lecturas y creación con Firestore; OpenAPI y Bruno pendientes       |
+| 4 · Auth con cookie de sesión, roles, despliegue, evidencias                 | Parcial: auth y “Mis reportes”; roles de Gestión y despliegue pendientes     |
 
 ## API disponible
 

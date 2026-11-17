@@ -132,6 +132,7 @@ Nota de seguimiento: antes de que el estudiante pidiera pausar, se inició un bo
 ## 2026-11-17 · Prueba real de Blob y ajuste CSP
 
 - **Propósito:** probar el flujo de carga en Production con autorización del usuario.
-- **Evidencia:** sesión de la aplicación activa y un reporte de prueba sin datos personales creado en Firestore. El cliente no pudo solicitar token: la CSP vigente rechazó `https://vercel.com/api/blob` en `connect-src`; no se completó ninguna subida de imagen.
-- **Cambio:** se permitió conectar a `https://vercel.com` y al host público de Blob en `connect-src` de `next.config.ts`. El reporte de prueba permanece en “Mis reportes” y se puede usar para reintentar la foto cuando se despliegue este ajuste.
-- **Pendiente:** pasar calidad/build/E2E, publicar el arreglo CSP y reintentar desde “Mis reportes”. No se guardaron contraseñas ni se leyeron valores de variables.
+- **Evidencia:** el primer intento creó un reporte de prueba sin datos personales, pero la CSP rechazó `https://vercel.com/api/blob` en `connect-src`. Después del ajuste y despliegue, se agregó la imagen de prueba al mismo reporte desde “Mis reportes”; el componente anunció “Foto guardada”, la API pública devolvió una URL en `fotoUrl` y el enlace directo del Blob abrió la imagen. No se creó un segundo reporte.
+- **Cambio:** se permitió conectar a `https://vercel.com` y al host público de Blob en `connect-src` de `next.config.ts`.
+- **Validación:** el commit `d1a486d` quedó desplegado en Production y GitHub CI pasó en sus 3 jobs. En el momento del ajuste CSP, `npm run check` pasó (96 Vitest y 11 hooks), `npm run build` pasó; la validación Playwright 20/20 fue ejecutada en el commit previo de la función de fotos.
+- **Decisión:** la prueba real confirmó subida y lectura pública del Blob. No se guardaron contraseñas ni se leyeron valores de variables. El reporte de prueba queda en Firestore para identificar la evidencia; su foto puede quitarse desde “Mis reportes” si el usuario lo solicita.
