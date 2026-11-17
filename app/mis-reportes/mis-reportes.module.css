@@ -1,0 +1,33 @@
+.lista {
+  display: grid;
+  gap: var(--espacio-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tarjeta {
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+}
+
+.titulo {
+  margin: 0 0 var(--espacio-2);
+  font-size: 1.125rem;
+}
+
+.titulo a {
+  display: inline-block;
+  min-height: 2.75rem;
+  padding-block: 0.6rem;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espacio-2) var(--espacio-4);
+  color: var(--texto-suave);
+}
