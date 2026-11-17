@@ -100,3 +100,10 @@ Nota de seguimiento: antes de que el estudiante pidiera pausar, se inició un bo
 - **Evidencia:** Playwright proporciona fixtures para `/api/incidentes` y una página de detalle de ejemplo desde `e2e/apoyo.ts`; filtros, presupuesto, responsive y navegación no requieren Firestore.
 - **Validación:** reproducción local con credenciales Admin deliberadamente inválidas: `npm run e2e` pasó (20/20). `npm run check` pasó (72 Vitest y 11 hooks) y `npm run build` pasó. La ejecución CI anterior falló por Axe `document-title` en la página de detalle real y por pruebas del mapa que llamaban a Firestore sin secretos.
 - **Decisión:** fixtures solo dentro de Playwright; producción sigue usando Firestore. Falta commit/push y una nueva corrida CI para confirmar el arreglo remoto.
+
+## 2026-11-16 · Procesamiento local y privacidad de fotos
+
+- **Propósito:** avanzar el requisito de Hito 2 de reducir imágenes a ≤ 5 MB y permitir solicitar la eliminación de metadatos de ubicación.
+- **Evidencia:** procesamiento con `createImageBitmap` y Canvas en `src/lib/procesar-foto.ts`; elección de privacidad y vista previa en `src/components/CamposFormularioReporte.tsx`; estado temporal del archivo en `src/hooks/useFormularioReporte.ts`; pruebas en `tests/lib/procesar-foto.test.ts` y `tests/components/FormularioReporte.test.tsx`.
+- **Validación:** 15 pruebas focalizadas del procesador/formulario pasaron; `npm run check` pasó (78 pruebas Vitest y 11 hooks), `npm run build` pasó y Playwright pasó (20/20).
+- **Decisión:** archivos bajo 5 MB se conservan si no se solicita quitar metadatos; si se solicita, o si exceden el límite, se reencodean como imagen optimizada y la conversión elimina metadatos EXIF. La foto permanece local y aún no se envía a Vercel Blob; el mensaje de interfaz lo aclara.

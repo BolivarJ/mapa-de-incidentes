@@ -4,6 +4,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { FormularioReporte } from "@/components/FormularioReporte";
 import { violaciones } from "./axe";
 
+const { procesarFoto } = vi.hoisted(() => ({ procesarFoto: vi.fn() }));
+
+vi.mock("@/lib/procesar-foto", () => ({
+  TAMANO_MAXIMO_FOTO: 5 * 1024 * 1024,
+  procesarFoto,
+}));
+
 vi.mock("@/components/mapa/SelectorUbicacion", () => ({
   SelectorUbicacion: ({ seleccionar }: { seleccionar: (lat: number, lng: number) => void }) => (
     <section role="region" aria-label="Elegir ubicación en el mapa">
@@ -141,6 +148,7 @@ describe("FormularioReporte", () => {
   });
 
   it("muestra una vista previa de la foto seleccionada", async () => {
+    procesarFoto.mockImplementation(async (archivo: File) => archivo);
     vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn(() => "blob:foto-local") }));
     const user = userEvent.setup();
     render(<FormularioReporte />);
@@ -151,9 +159,26 @@ describe("FormularioReporte", () => {
     expect(
       await screen.findByRole("img", { name: "Vista previa de la foto seleccionada" }),
     ).toHaveAttribute("src", "blob:foto-local");
+    expect(procesarFoto).toHaveBeenCalledWith(foto, false);
   });
 
-  it("rechaza fotos que superan 5 MB", async () => {
+  it("usa la preferencia para pedir que se eliminen metadatos de ubicación", async () => {
+    procesarFoto.mockImplementation(async (archivo: File) => archivo);
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn(() => "blob:foto-local") }));
+    const user = userEvent.setup();
+    render(<FormularioReporte />);
+    const foto = new File(["imagen"], "barrio.png", { type: "image/png" });
+
+    await user.upload(screen.getByLabelText("Foto (opcional)"), foto);
+    await user.click(screen.getByLabelText("Quitar metadatos de ubicación de la foto"));
+
+    await waitFor(() => expect(procesarFoto).toHaveBeenLastCalledWith(foto, true));
+  });
+
+  it("acepta una foto grande cuando el procesador la reduce al límite", async () => {
+    procesarFoto.mockImplementation(
+      async () => new File(["reducida"], "grande.webp", { type: "image/webp" }),
+    );
     vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn(() => "blob:foto-local") }));
     const user = userEvent.setup();
     render(<FormularioReporte />);
@@ -162,8 +187,28 @@ describe("FormularioReporte", () => {
 
     await user.upload(screen.getByLabelText("Foto (opcional)"), foto);
 
-    expect(screen.getByRole("alert")).toHaveTextContent("La foto debe pesar máximo 5 MB");
-    expect(screen.queryByRole("img", { name: "Vista previa de la foto seleccionada" })).toBeNull();
+    expect(procesarFoto).toHaveBeenCalledWith(foto, false);
+    expect(
+      await screen.findByRole("img", { name: "Vista previa de la foto seleccionada" }),
+    ).toHaveAttribute("src", "blob:foto-local");
+  });
+
+  it("avisa que la foto procesada todavía no se adjunta al reporte", async () => {
+    const user = userEvent.setup();
+    const foto = new File(["imagen"], "barrio.png", { type: "image/png" });
+    procesarFoto.mockImplementation(async (archivo: File) => archivo);
+    vi.stubGlobal("URL", Object.assign(URL, { createObjectURL: vi.fn(() => "blob:foto-local") }));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 201 })));
+    render(<FormularioReporte />);
+    completarCampos();
+    await user.upload(screen.getByLabelText("Foto (opcional)"), foto);
+    await user.click(screen.getByRole("button", { name: "Enviar reporte" }));
+
+    await waitFor(() => expect(fetch).toHaveBeenCalled());
+    expect(JSON.parse(vi.mocked(fetch).mock.calls[0]?.[1]?.body as string)).not.toHaveProperty(
+      "foto",
+    );
+    expect(await screen.findByRole("status")).toHaveTextContent("La foto todavía no se guarda");
   });
 
   it("no tiene violaciones de accesibilidad automatizadas", async () => {

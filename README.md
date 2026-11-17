@@ -19,19 +19,19 @@ Requiere Node ≥ 22. En Windows, trabaje en WSL2 (Ubuntu) para que funcione el 
 
 ## Estado por hito
 
-| Hito                                                                         | Estado                                                                                       |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| 1 · Mapa + lista accesible, fetch con carga/vacío/error, configuración de IA | ✅ Interfaz y estados; los datos de ejemplo quedan como fixtures de pruebas                  |
-| 2 · Formularios, rutas, reportar con foto y ubicación                        | Parcial: formulario, alternativa de mapa y diseño en 2 columnas desde 768 px; Blob pendiente |
-| 3 · API por capas con Firestore, `openapi.yaml`, Bruno                       | Parcial: lecturas y creación con Firestore; OpenAPI y Bruno pendientes                       |
-| 4 · Auth con cookie de sesión, roles, despliegue, evidencias                 | Parcial: auth y “Mis reportes”; roles de Gestión y despliegue pendientes                     |
+| Hito                                                                         | Estado                                                                                                  |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| 1 · Mapa + lista accesible, fetch con carga/vacío/error, configuración de IA | ✅ Interfaz y estados; los datos de ejemplo quedan como fixtures de pruebas                             |
+| 2 · Formularios, rutas, reportar con foto y ubicación                        | Parcial: formulario, mapa alternativo, diseño responsive y fotos optimizadas localmente; Blob pendiente |
+| 3 · API por capas con Firestore, `openapi.yaml`, Bruno                       | Parcial: lecturas y creación con Firestore; OpenAPI y Bruno pendientes                                  |
+| 4 · Auth con cookie de sesión, roles, despliegue, evidencias                 | Parcial: auth y “Mis reportes”; roles de Gestión y despliegue pendientes                                |
 
 ## API disponible
 
 `GET /api/incidentes?norte=&sur=&este=&oeste=&categoria=&estado=&desde=&limite=` → `{ items, siguienteCursor }`.
 Consulta el rango de latitud en el repositorio y filtra la longitud en el servidor (Firestore solo admite rango en un campo). Errores `{ error, detalles? }`.
 
-`POST /api/incidentes` requiere una sesión verificada y acepta `{ categoria, descripcion, lat, lng }`. El servidor asigna el `uid`, estado inicial y fecha, y escribe el incidente junto con el primer evento de historial en un lote atómico. La foto todavía no se adjunta ni se guarda.
+`POST /api/incidentes` requiere una sesión verificada y acepta `{ categoria, descripcion, lat, lng }`. El servidor asigna el `uid`, estado inicial y fecha, y escribe el incidente junto con el primer evento de historial en un lote atómico. La foto se optimiza localmente a un máximo de 5 MB y existe una opción para quitar metadatos reencodeándola, pero aún no se adjunta ni se sube a Blob.
 
 La lectura usa la colección `incidentes`; el ID del documento es el ID del incidente y sus campos se validan con el esquema compartido. El historial se lee desde la subcolección `historial`, ordenado por `creadoEn`. El endpoint público omite `uid`; “Mis reportes” filtra en el servidor por el UID de la sesión verificada.
 

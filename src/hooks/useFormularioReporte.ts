@@ -1,7 +1,8 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
-import type { ChangeEvent, Dispatch, FormEvent, SetStateAction } from "react";
+import { useCallback, useState } from "react";
+import type { Dispatch, FormEvent, SetStateAction } from "react";
 import { nuevoIncidenteSchema } from "@/schemas/incidente";
+import { useFotoReporte } from "@/hooks/useFotoReporte";
 
 export type CamposReporte = {
   categoria: string;
@@ -14,7 +15,6 @@ type CambiarCampos = Dispatch<SetStateAction<CamposReporte>>;
 type CambiarErrores = Dispatch<SetStateAction<ErroresReporte>>;
 type CambiarMensaje = Dispatch<SetStateAction<string>>;
 type CambiarEstado = Dispatch<SetStateAction<boolean>>;
-const TAMANO_MAXIMO_FOTO = 5 * 1024 * 1024;
 const CAMPOS_INICIALES: CamposReporte = {
   categoria: "",
   descripcion: "",
@@ -32,26 +32,6 @@ function cambiarCampo(
   setCampos((actuales) => ({ ...actuales, [campo]: valor }));
   setErrores((actuales) => ({ ...actuales, [campo]: undefined }));
   setMensaje("");
-}
-
-function cambiarFoto(
-  evento: ChangeEvent<HTMLInputElement>,
-  setFotoUrl: CambiarMensaje,
-  setErrores: CambiarErrores,
-  setMensaje: CambiarMensaje,
-) {
-  const archivo = evento.currentTarget.files?.[0];
-  setFotoUrl("");
-  setErrores((actuales) => ({ ...actuales, foto: undefined }));
-  setMensaje("");
-  if (!archivo) return;
-  if (!archivo.type.startsWith("image/")) {
-    setErrores((actuales) => ({ ...actuales, foto: "Seleccione un archivo de imagen." }));
-  } else if (archivo.size > TAMANO_MAXIMO_FOTO) {
-    setErrores((actuales) => ({ ...actuales, foto: "La foto debe pesar máximo 5 MB." }));
-  } else {
-    setFotoUrl(URL.createObjectURL(archivo));
-  }
 }
 
 function mensajeDeUbicacion(error: GeolocationPositionError): string {
@@ -146,10 +126,10 @@ async function validarReporte(
   teniaFoto: boolean,
   setErrores: CambiarErrores,
   setCampos: CambiarCampos,
-  setFotoUrl: CambiarMensaje,
   setMensaje: CambiarMensaje,
   setRequiereSesion: CambiarEstado,
   setEnviando: CambiarEstado,
+  limpiarFoto: () => void,
 ) {
   const formulario = evento.currentTarget;
   evento.preventDefault();
@@ -180,7 +160,7 @@ async function validarReporte(
     () => {
       formulario.reset();
       setCampos(CAMPOS_INICIALES);
-      setFotoUrl("");
+      limpiarFoto();
     },
     setMensaje,
     setRequiereSesion,
@@ -192,17 +172,10 @@ export function useFormularioReporte() {
   const [campos, setCampos] = useState<CamposReporte>(CAMPOS_INICIALES);
   const [errores, setErrores] = useState<ErroresReporte>({});
   const [mensaje, setMensaje] = useState("");
-  const [fotoUrl, setFotoUrl] = useState("");
   const [requiereSesion, setRequiereSesion] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [selectorVisible, setSelectorVisible] = useState(false);
-
-  useEffect(
-    () => () => {
-      if (fotoUrl) URL.revokeObjectURL(fotoUrl);
-    },
-    [fotoUrl],
-  );
+  const foto = useFotoReporte(setMensaje);
 
   const seleccionarUbicacion = useCallback(
     (lat: number, lng: number) => marcarUbicacion(lat, lng, setCampos, setErrores, setMensaje),
@@ -211,16 +184,19 @@ export function useFormularioReporte() {
 
   return {
     campos,
-    errores,
+    errores: { ...errores, ...(foto.error ? { foto: foto.error } : {}) },
     mensaje,
     requiereSesion,
     enviando,
     selectorVisible,
-    fotoUrl: fotoUrl || null,
+    fotoArchivo: foto.archivo,
+    quitarMetadatosUbicacion: foto.quitarMetadatos,
+    procesandoFoto: foto.procesando,
+    fotoUrl: foto.url,
     cambiarCampo: (campo: keyof CamposReporte, valor: string) =>
       cambiarCampo(campo, valor, setCampos, setErrores, setMensaje),
-    cambiarFoto: (evento: ChangeEvent<HTMLInputElement>) =>
-      cambiarFoto(evento, setFotoUrl, setErrores, setMensaje),
+    cambiarFoto: foto.cambiar,
+    cambiarQuitarMetadatosUbicacion: foto.cambiarPreferencia,
     usarUbicacion: () => usarUbicacion(setCampos, setErrores, setMensaje, setSelectorVisible),
     marcarUbicacion: seleccionarUbicacion,
     validarReporte: (evento: FormEvent<HTMLFormElement>) =>
@@ -228,13 +204,13 @@ export function useFormularioReporte() {
         evento,
         campos,
         errores,
-        Boolean(fotoUrl),
+        Boolean(foto.url),
         setErrores,
         setCampos,
-        setFotoUrl,
         setMensaje,
         setRequiereSesion,
         setEnviando,
+        foto.limpiar,
       ),
   };
 }

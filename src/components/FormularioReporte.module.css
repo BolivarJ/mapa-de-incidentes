@@ -24,6 +24,23 @@
   padding: var(--espacio-2);
 }
 
+.opcionMetadatos {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+}
+
+.formulario input[type="checkbox"] {
+  flex: 0 0 1.25rem;
+  width: 1.25rem;
+  min-height: 1.25rem;
+  margin: 0;
+}
+
+.opcionMetadatos label {
+  font-weight: 400;
+}
+
 .ubicacion {
   display: grid;
   gap: var(--espacio-3);
