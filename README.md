@@ -39,14 +39,14 @@ La autenticación intercambia un ID token reciente de Firebase por la cookie Htt
 
 ## Dependencias y por qué
 
-| Paquete                                                      | Motivo                                                               |
-| ------------------------------------------------------------ | -------------------------------------------------------------------- |
-| `leaflet`                                                    | Mapa ligero (~40 kB gzip), cargado con `next/dynamic` y `ssr: false` |
-| `zod`                                                        | Un solo esquema de validación para cliente y servidor                |
-| `firebase`, `firebase-admin`                                 | Auth en el navegador; Firestore y cookies de sesión en el servidor   |
-| `@vercel/blob`                                               | Fotos de los incidentes                                              |
-| `vitest`, `@testing-library/*`, `jsdom`, `axe-core`          | Pruebas unitarias, de componentes y de accesibilidad                 |
-| `eslint-config-prettier`, `prettier`, `husky`, `lint-staged` | Calidad automática en commit y push                                  |
+| Paquete                                                      | Motivo                                                                                                                   |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `leaflet`                                                    | Mapa ligero (~40 kB gzip), cargado con `next/dynamic` y `ssr: false`                                                     |
+| `zod`                                                        | Un solo esquema de validación para cliente y servidor                                                                    |
+| `firebase`, `firebase-admin`                                 | Auth en el navegador; Firestore y cookies de sesión en el servidor. Admin 13.10 evita incompatibilidad CJS/ESM de Vercel |
+| `@vercel/blob`                                               | Fotos de los incidentes                                                                                                  |
+| `vitest`, `@testing-library/*`, `jsdom`, `axe-core`          | Pruebas unitarias, de componentes y de accesibilidad                                                                     |
+| `eslint-config-prettier`, `prettier`, `husky`, `lint-staged` | Calidad automática en commit y push                                                                                      |
 
 `overrides` en `package.json` fuerza versiones parcheadas de `@grpc/grpc-js`, `zod` y `minimatch` (avisos altos de `npm audit` en dependencias transitivas de `firebase` y `@vercel/blob`).
 

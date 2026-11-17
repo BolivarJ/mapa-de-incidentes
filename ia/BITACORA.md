@@ -107,3 +107,10 @@ Nota de seguimiento: antes de que el estudiante pidiera pausar, se inició un bo
 - **Evidencia:** procesamiento con `createImageBitmap` y Canvas en `src/lib/procesar-foto.ts`; elección de privacidad y vista previa en `src/components/CamposFormularioReporte.tsx`; estado temporal del archivo en `src/hooks/useFormularioReporte.ts`; pruebas en `tests/lib/procesar-foto.test.ts` y `tests/components/FormularioReporte.test.tsx`.
 - **Validación:** 15 pruebas focalizadas del procesador/formulario pasaron; `npm run check` pasó (78 pruebas Vitest y 11 hooks), `npm run build` pasó y Playwright pasó (20/20).
 - **Decisión:** archivos bajo 5 MB se conservan si no se solicita quitar metadatos; si se solicita, o si exceden el límite, se reencodean como imagen optimizada y la conversión elimina metadatos EXIF. La foto permanece local y aún no se envía a Vercel Blob; el mensaje de interfaz lo aclara.
+
+## 2026-11-16 · Corrección del 500 en Vercel
+
+- **Propósito:** corregir el error 500 de producción identificado en los logs de runtime de Vercel.
+- **Evidencia:** `/`, `/reportar` y `/api/incidentes` fallaban al cargar `firebase-admin/auth`: `jwks-rsa@4.1.0` usaba `require()` para cargar `jose@6`, ESM no compatible con el cargador CommonJS observado en Vercel.
+- **Validación:** se cambió Firebase Admin a 13.10.0, que resuelve `jwks-rsa@3.2.2` y `jose@4.15.9`; Node cargó Auth y Firestore, `npm run check` (78 Vitest + 11 hooks), `npm run build` y Playwright (20/20) pasaron. El cambio está listo para push y redeploy; aún no se ha verificado el dominio tras el redeploy.
+- **Decisión:** mantener Admin SDK 13.10.0 por compatibilidad con el runtime de producción. `npm audit` reporta avisos moderados en dependencias transitivas; el umbral CI `high` no los bloquea. No se editaron variables ni secretos de Vercel.
