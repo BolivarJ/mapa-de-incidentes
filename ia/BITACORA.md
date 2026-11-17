@@ -91,15 +91,15 @@ Nota de seguimiento: antes de que el estudiante pidiera pausar, se inició un bo
 
 - **Propósito:** publicar el estado verificado del proyecto en el remoto autorizado, en el orden de commits indicado por `PASOS.md`, y revisar el escaneo de secretos del historial.
 - **Evidencia:** cuatro commits ordenados en `main`; `.env.local` confirmado fuera del índice; hooks de Husky instalados después de inicializar Git.
-- **Validación:** `npm run check` pasó (72 pruebas Vitest y 11 de seguridad); el push pasó su hook pre-push. Gitleaks señaló un falso positivo en el fixture de clave PEM de una prueba; se reemplazó el fixture por líneas ficticias, se añadió una excepción exacta para el marcador histórico y el escaneo completo local reportó “no leaks found”. El job de secretos de la segunda ejecución CI pasó; el resto de esa ejecución estaba en curso al documentar.
-- **Decisión:** no se reescribió el historial remoto ni se saltaron hooks. El repositorio quedó publicado; CI final aún debe confirmarse. No se guardan secretos ni identificadores personales en esta entrada.
+- **Validación:** `npm run check` pasó (72 pruebas Vitest y 11 de seguridad); el push pasó su hook pre-push. Gitleaks señaló un falso positivo en el fixture de clave PEM de una prueba; se reemplazó el fixture por líneas ficticias, se añadió una excepción exacta para el marcador histórico y el escaneo local reportó “no leaks found”.
+- **Decisión:** no se reescribió el historial remoto ni se saltaron hooks. Los commits se publicaron en GitHub. La CI completa quedó finalmente confirmada en verde en la ejecución posterior al commit de procesamiento de fotos; no se guardan secretos ni identificadores personales.
 
 ## 2026-11-16 · E2E de CI independientes de Firebase
 
 - **Propósito:** corregir el job e2e de GitHub Actions, que no dispone de `.env.local` ni debe necesitar credenciales reales de Firebase.
 - **Evidencia:** Playwright proporciona fixtures para `/api/incidentes` y una página de detalle de ejemplo desde `e2e/apoyo.ts`; filtros, presupuesto, responsive y navegación no requieren Firestore.
-- **Validación:** reproducción local con credenciales Admin deliberadamente inválidas: `npm run e2e` pasó (20/20). `npm run check` pasó (72 Vitest y 11 hooks) y `npm run build` pasó. La ejecución CI anterior falló por Axe `document-title` en la página de detalle real y por pruebas del mapa que llamaban a Firestore sin secretos.
-- **Decisión:** fixtures solo dentro de Playwright; producción sigue usando Firestore. Falta commit/push y una nueva corrida CI para confirmar el arreglo remoto.
+- **Validación:** reproducción local con credenciales Admin deliberadamente inválidas: `npm run e2e` pasó (20/20). `npm run check` pasó (72 Vitest y 11 hooks) y `npm run build` pasó. La ejecución CI previa falló por Axe `document-title` en la página de detalle real y pruebas del mapa que consultaban Firestore sin credenciales; la ejecución CI posterior, asociada al commit `5a4ca62`, terminó correctamente.
+- **Decisión:** fixtures solo dentro de Playwright; producción sigue usando Firestore. El arreglo está publicado y la CI final se confirmó en verde.
 
 ## 2026-11-16 · Procesamiento local y privacidad de fotos
 
