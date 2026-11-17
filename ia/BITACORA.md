@@ -143,3 +143,10 @@ Nota de seguimiento: antes de que el estudiante pidiera pausar, se inició un bo
 - **Evidencia:** el repositorio calcula el día calendario de Medellín y usa un ID de contador derivado de un hash del UID y la fecha. Una transacción lee el contador; si es menor que cinco, escribe contador, incidente e historial inicial en una sola operación. Al llegar a cinco retorna el resultado tipado de límite y la API responde HTTP 429 con `{ error }` y `X-Request-Id`.
 - **Pruebas primero:** se añadieron pruebas de quinto/siguiente reporte, rechazo del sexto sin escrituras, reinicio al cruzar medianoche de Medellín y mapeo API 429 antes de implementar el cambio.
 - **Validación:** `npm run check` pasó con 100 pruebas Vitest y 11 pruebas de hooks. Se verifican el quinto reporte, el rechazo del sexto sin escrituras, el reinicio al cruzar la medianoche de Medellín y la respuesta API 429 con `X-Request-Id`. `npm run build` pasó, Playwright pasó (20/20) y `npm audit --audit-level=high` pasó; persisten avisos moderados de dependencias transitivas.
+
+## 2026-11-17 · Apoyos únicos a reportes
+
+- **Propósito:** permitir que cada vecino indique «A mí también me pasa» desde el detalle de un reporte.
+- **Evidencia:** botón en `src/components/BotonApoyo.tsx`, ruta `app/api/incidentes/[id]/apoyo/route.ts` y transacción en `src/repositories/incidentes-firestore.ts`; pruebas de componente, API y repositorio.
+- **Validación:** `npm run check` pasó con 108 pruebas Vitest y 11 pruebas de hooks; `npm run build` y Playwright (20/20) pasaron. Las pruebas de apoyo usan dobles; las pruebas de detalle en Playwright usan una página simulada y no verifican el botón real. No se ha comprobado el apoyo en Firestore real.
+- **Decisión:** la sesión verificada determina el usuario. Una transacción registra un apoyo por usuario y reporte y aumenta el contador; un apoyo repetido recibe HTTP 409. Sin sesión, la interfaz ofrece iniciar sesión.

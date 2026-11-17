@@ -26,6 +26,13 @@ export type ResultadoActualizacionFoto =
 export type ResultadoEliminacionFoto =
   { ok: true; fotoUrl: string | null } | { ok: false; motivo: "no-encontrado" | "no-autorizado" };
 
+export type ResultadoApoyo =
+  { ok: true; apoyos: number } | { ok: false; motivo: "no-encontrado" | "ya-apoyado" };
+
+export interface RepositorioApoyosIncidente {
+  apoyar(id: string, uid: string): Promise<ResultadoApoyo>;
+}
+
 export interface RepositorioFotosIncidente {
   actualizarFoto(id: string, uid: string, fotoUrl: string): Promise<ResultadoActualizacionFoto>;
   eliminarFoto(id: string, uid: string): Promise<ResultadoEliminacionFoto>;
@@ -36,4 +43,5 @@ export interface RepositorioIncidentesFirestore
     RepositorioIncidentes,
     RepositorioCreacionIncidente,
     RepositorioReportesUsuario,
+    RepositorioApoyosIncidente,
     RepositorioFotosIncidente {}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FormaEstado } from "@/components/FormaEstado";
+import { BotonApoyo } from "@/components/BotonApoyo";
 import Image from "next/image";
 import { formatearFecha, formatearFechaHora } from "@/lib/formato";
 import { repositorioIncidentesFirestore } from "@/repositories/incidentes-firestore";
@@ -36,7 +37,6 @@ export default async function DetalleIncidente({ params }: Props) {
           Reportado el{" "}
           <time dateTime={incidente.creadoEn}>{formatearFecha(incidente.creadoEn)}</time>
         </span>
-        <span>{incidente.apoyos} vecinos dicen «a mí también me pasa»</span>
       </p>
       <p>{incidente.descripcion}</p>
       {incidente.fotoUrl && (
@@ -49,6 +49,7 @@ export default async function DetalleIncidente({ params }: Props) {
           unoptimized
         />
       )}
+      <BotonApoyo id={incidente.id} apoyosIniciales={incidente.apoyos} />
       <section aria-labelledby="titulo-seguimiento">
         <h2 id="titulo-seguimiento">Seguimiento</h2>
         <ol className={styles.linea}>

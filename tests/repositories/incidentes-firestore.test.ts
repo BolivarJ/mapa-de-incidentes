@@ -222,4 +222,63 @@ describe("crearRepositorioFirestore", () => {
     expect(transaccion.update).toHaveBeenCalledOnce();
     expect(transaccion.update).toHaveBeenCalledWith(referencia, { fotoUrl: null });
   });
+
+  describe("apoyar", () => {
+    function firestoreConApoyo(existeIncidente: boolean, existeApoyo: boolean) {
+      const refApoyo = {};
+      const refIncidente = { collection: vi.fn(() => ({ doc: vi.fn(() => refApoyo) })) };
+      const transaccion = {
+        get: vi.fn(async (ref: unknown) =>
+          ref === refApoyo
+            ? { exists: existeApoyo }
+            : {
+                exists: existeIncidente,
+                id: "incidente-1",
+                data: () => ({ ...incidente, apoyos: 2 }),
+              },
+        ),
+        create: vi.fn(),
+        update: vi.fn(),
+      };
+      const firestore = {
+        collection: vi.fn(() => ({ doc: vi.fn(() => refIncidente) })),
+        runTransaction: vi.fn(async (operacion) => operacion(transaccion)),
+      } as unknown as Firestore;
+      return { firestore, transaccion, refApoyo, refIncidente };
+    }
+
+    it("crea un apoyo único por usuario e incrementa el contador en la misma transacción", async () => {
+      const falso = firestoreConApoyo(true, false);
+
+      const resultado = await crearRepositorioFirestore(falso.firestore).apoyar(
+        "incidente-1",
+        "vecino-2",
+      );
+
+      expect(resultado).toEqual({ ok: true, apoyos: 3 });
+      expect(falso.refIncidente.collection).toHaveBeenCalledWith("apoyos");
+      expect(falso.transaccion.create).toHaveBeenCalledWith(
+        falso.refApoyo,
+        expect.objectContaining({ creadoEn: expect.any(String) }),
+      );
+      expect(falso.transaccion.update).toHaveBeenCalledWith(
+        falso.refIncidente,
+        expect.objectContaining({ apoyos: expect.anything() }),
+      );
+    });
+
+    it("no escribe si el usuario ya apoyó o el incidente no existe", async () => {
+      const repetido = firestoreConApoyo(true, true);
+      await expect(
+        crearRepositorioFirestore(repetido.firestore).apoyar("incidente-1", "vecino-2"),
+      ).resolves.toEqual({ ok: false, motivo: "ya-apoyado" });
+      const inexistente = firestoreConApoyo(false, false);
+      await expect(
+        crearRepositorioFirestore(inexistente.firestore).apoyar("incidente-1", "vecino-2"),
+      ).resolves.toEqual({ ok: false, motivo: "no-encontrado" });
+
+      expect(repetido.transaccion.create).not.toHaveBeenCalled();
+      expect(inexistente.transaccion.create).not.toHaveBeenCalled();
+    });
+  });
 });

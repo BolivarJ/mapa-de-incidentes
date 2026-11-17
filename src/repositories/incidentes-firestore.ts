@@ -1,9 +1,10 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import type { Firestore } from "firebase-admin/firestore";
+import { FieldValue, type Firestore } from "firebase-admin/firestore";
 import { getFirestoreAdmin } from "@/lib/firebase-admin";
 import type {
   RepositorioIncidentesFirestore,
+  ResultadoApoyo,
   ResultadoCreacionIncidente,
   ResultadoActualizacionFoto,
   ResultadoEliminacionFoto,
@@ -108,6 +109,21 @@ async function leerPorUsuario(db: Firestore, uid: string): Promise<Incidente[]> 
     .sort((a, b) => b.creadoEn.localeCompare(a.creadoEn));
 }
 
+async function apoyarIncidente(db: Firestore, id: string, uid: string): Promise<ResultadoApoyo> {
+  const referencia = db.collection(COLECCION_INCIDENTES).doc(id);
+  const referenciaApoyo = referencia.collection("apoyos").doc(uid);
+  return db.runTransaction(async (transaccion) => {
+    const documento = await transaccion.get(referencia);
+    const apoyo = await transaccion.get(referenciaApoyo);
+    if (!documento.exists) return { ok: false, motivo: "no-encontrado" };
+    if (apoyo.exists) return { ok: false, motivo: "ya-apoyado" };
+    const incidente = convertirIncidente(documento.id, documento.data());
+    transaccion.create(referenciaApoyo, { creadoEn: new Date().toISOString() });
+    transaccion.update(referencia, { apoyos: FieldValue.increment(1) });
+    return { ok: true, apoyos: incidente.apoyos + 1 };
+  });
+}
+
 async function actualizarFoto(
   db: Firestore,
   id: string,
@@ -174,6 +190,9 @@ export function crearRepositorioFirestore(db: Firestore): RepositorioIncidentesF
     async crear(nuevo: NuevoIncidente, uid: string): Promise<ResultadoCreacionIncidente> {
       return guardarIncidente(db, nuevo, uid);
     },
+    apoyar(id, uid) {
+      return apoyarIncidente(db, id, uid);
+    },
     actualizarFoto(id, uid, fotoUrl) {
       return actualizarFoto(db, id, uid, fotoUrl);
     },
@@ -204,6 +223,9 @@ export const repositorioIncidentesFirestore: RepositorioIncidentesFirestore = {
   },
   crear(nuevo, uid) {
     return crearRepositorioFirestore(firestoreConfigurado()).crear(nuevo, uid);
+  },
+  apoyar(id, uid) {
+    return crearRepositorioFirestore(firestoreConfigurado()).apoyar(id, uid);
   },
   actualizarFoto(id, uid, fotoUrl) {
     return crearRepositorioFirestore(firestoreConfigurado()).actualizarFoto(id, uid, fotoUrl);

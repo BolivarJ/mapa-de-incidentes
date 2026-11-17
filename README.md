@@ -19,12 +19,12 @@ Requiere Node ≥ 22. En Windows, trabaje en WSL2 (Ubuntu) para que funcione el 
 
 ## Estado por hito
 
-| Hito                                                                         | Estado                                                                       |
-| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| 1 · Mapa + lista accesible, fetch con carga/vacío/error, configuración de IA | ✅ Interfaz y estados; los datos de ejemplo quedan como fixtures de pruebas  |
-| 2 · Formularios, rutas, reportar con foto y ubicación                        | Fotos subidas y verificadas en Production; revisar otros requisitos del hito |
-| 3 · API por capas con Firestore, `openapi.yaml`, Bruno                       | Parcial: lecturas, creación con límite diario; OpenAPI y Bruno pendientes    |
-| 4 · Auth con cookie de sesión, roles, despliegue, evidencias                 | Parcial: auth y “Mis reportes”; roles de Gestión y despliegue pendientes     |
+| Hito                                                                         | Estado                                                                             |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| 1 · Mapa + lista accesible, fetch con carga/vacío/error, configuración de IA | ✅ Interfaz y estados; los datos de ejemplo quedan como fixtures de pruebas        |
+| 2 · Formularios, rutas, reportar con foto y ubicación                        | Fotos subidas y verificadas en Production; revisar otros requisitos del hito       |
+| 3 · API por capas con Firestore, `openapi.yaml`, Bruno                       | Parcial: lecturas, creación con límite diario y apoyos; OpenAPI y Bruno pendientes |
+| 4 · Auth con cookie de sesión, roles, despliegue, evidencias                 | Parcial: auth y “Mis reportes”; roles de Gestión y despliegue pendientes           |
 
 ## API disponible
 
@@ -32,6 +32,8 @@ Requiere Node ≥ 22. En Windows, trabaje en WSL2 (Ubuntu) para que funcione el 
 Consulta el rango de latitud en el repositorio y filtra la longitud en el servidor (Firestore solo admite rango en un campo). Errores `{ error, detalles? }`.
 
 `POST /api/incidentes` requiere una sesión verificada y acepta `{ categoria, descripcion, lat, lng }`. El servidor asigna el `uid`, estado inicial y fecha, y escribe el incidente junto con el primer evento de historial en una transacción atómica. Se permiten hasta cinco reportes por usuario y día calendario de Medellín; el sexto se rechaza con HTTP 429. El contador diario y la creación se actualizan en una transacción de Firestore para que solicitudes concurrentes no superen el límite. La foto se optimiza localmente a un máximo de 5 MB y existe una opción para quitar metadatos reencodeándola. Después de crear el reporte, el navegador sube JPEG/PNG/WebP a Blob con un token limitado al reporte del usuario autenticado; el servidor comprueba tipo/tamaño y guarda la URL en Firestore. “Mis reportes” permite añadir, reemplazar o quitar la foto. Si la subida inicial falla, el reporte se conserva sin foto y puede agregarse desde esa página.
+
+`POST /api/incidentes/[id]/apoyo` requiere sesión verificada y origen coincidente. Registra un único apoyo por usuario e incidente y actualiza el contador en una transacción; responde HTTP 201 con `{ apoyos }`, 401 sin sesión, 403 para origen no permitido, 404 si no existe el reporte y 409 si ya se apoyó. El botón está en el detalle del reporte.
 
 Para habilitar subidas, conecta un almacén Vercel Blob al proyecto y a los entornos necesarios, incluyendo Development si se ejecuta localmente. La ruta usa `BLOB_READ_WRITE_TOKEN`; la variable de desarrollo de ejemplo es ficticia y no sirve para subir. No copies credenciales a archivos versionados.
 
