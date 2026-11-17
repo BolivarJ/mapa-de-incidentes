@@ -1,0 +1,9 @@
+# 1) Secretos: bloquea el commit si lo preparado contiene una clave (reto gitleaks).
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "Falta gitleaks. Instálelo (ver ia/SECRETOS.md) antes de hacer commit." >&2
+  exit 1
+fi
+gitleaks git --pre-commit --staged --redact --verbose --config .gitleaks.toml
+
+# 2) Formato y lint de lo modificado.
+npx lint-staged

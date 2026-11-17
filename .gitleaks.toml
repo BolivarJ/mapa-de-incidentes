@@ -1,0 +1,32 @@
+# Escaneo de secretos (reto de IA). Reglas por defecto de gitleaks + reglas propias del proyecto.
+title = "46-mapa-de-incidentes"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "vercel-blob-token"
+description = "Token de lectura/escritura de Vercel Blob"
+regex = '''vercel_blob_rw_[A-Za-z0-9]{16,}_[A-Za-z0-9]{16,}'''
+keywords = ["vercel_blob_rw_"]
+
+[[rules]]
+id = "firebase-service-account"
+description = "Cuenta de servicio de Firebase (JSON del Admin SDK)"
+regex = '''"type"\s*:\s*"service_account"'''
+keywords = ["service_account"]
+
+[[rules]]
+id = "canario-contencion"
+description = "Valor canario de las pruebas de contención: nunca debe llegar a Git"
+regex = '''ZZZ-NO-ES-UN-SECRETO'''
+keywords = ["zzz-no-es-un-secreto"]
+
+[[allowlists]]
+description = "Documentación que menciona el canario a propósito y valores falsos de env.example"
+paths = [
+  '''^ia/PRUEBAS-CONTENCION\.md$''',
+  '''^ia/SECRETOS\.md$''',
+  '''^env\.example$''',
+  '''^\.gitleaks\.toml$''',
+]
